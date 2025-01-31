@@ -1,6 +1,9 @@
 ## Guide
 
-Left off here:
+Left off here: https://laravel.com/docs/11.x/passport#requesting-tokens
+
+TODO:
+- [ ] Add forgot password page and functionality
 
 # Kerkalender
 

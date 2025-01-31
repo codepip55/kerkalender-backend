@@ -56,12 +56,12 @@
 <body>
 <nav class="bg-white px-5 py-3 mx-5 rounded-3xl absolute top-2 left-0 right-0 z-10">
     <div class="flex justify-between">
-        <div class="px-5 py-3 bg-[#e0e0e0] rounded-full cursor-pointer">
-            <i class="fa-solid fa-house"></i> Home
+        <div class="px-5 py-3 bg-[#e0e0e0] rounded-full">
+            <a href="/"><i class="fa-solid fa-house"></i> Home</a>
         </div>
         <div class="flex space-x-5 my-auto mr-5">
-            <div class="cursor-pointer nav-link">Login</div>
-            <div class="cursor-pointer nav-link">Profile</div>
+            <div class="nav-link"><a href="/login">Login</a></div>
+            <div class="nav-link"><a href="/profile">Profile</a></div>
         </div>
     </div>
 </nav>
