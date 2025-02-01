@@ -15,6 +15,7 @@ Route::get('/change-password', [PagesController::class, 'getChangePassword'])->n
 Route::post('/change-password', [AuthController::class, 'changePassword'])->name('change-password');
 Route::get('/forgot-password', [PagesController::class, 'getForgotPassword'])->name('password.email');
 Route::post('/forgot-password', [AuthController::class, 'resetPassword'])->name('password.reset');
+Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/email/verify', [PagesController::class, 'getEmailVerify'])->middleware('auth')->name('verification.notice');
 Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])->middleware(['auth', 'signed'])->name('verification.verify');
