@@ -60,8 +60,12 @@
             <a href="/"><i class="fa-solid fa-house"></i> Home</a>
         </div>
         <div class="flex space-x-5 my-auto mr-5">
-            <div class="nav-link"><a href="/login">Login</a></div>
-            <div class="nav-link"><a href="/profile">Profile</a></div>
+            @auth()
+                <div class="nav-link"><a href="/logout">Afmelden</a></div>
+            @else
+                <div class="nav-link"><a href="/login">Aanmelden</a></div>
+            @endauth
+            <div class="nav-link"><a href="/profile">Profiel</a></div>
         </div>
     </div>
 </nav>
