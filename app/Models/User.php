@@ -46,4 +46,10 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
         ];
     }
+    public function teams() {
+        return $this->belongsToMany(Team::class)->withPivot('status');
+    }
+    public function services_managed() {
+        return $this->hasMany(Service::class, 'service_manager_id');
+    }
 }
