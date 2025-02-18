@@ -3,9 +3,13 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InternalAuthController;
+use App\Http\Controllers\AuthController;
 
 // Internal Auth
 Route::get('/auth/kerkalender', [InternalAuthController::class, 'login']);
+Route::get('/auth/silent', [InternalAuthController::class, 'silentAuth']);
+Route::get('/auth/logout', [AuthController::class, 'logoutApi'])->middleware('web');
+
 Route::get('/user/bearer', function (Request $request) {
     return $request->user();
 })->middleware('auth:api');

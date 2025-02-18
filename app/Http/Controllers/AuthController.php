@@ -14,6 +14,11 @@ use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
+    private $internalauthcontroller;
+
+    public function __construct(InternalAuthController $internalauthcontroller) {
+        $this->internalauthcontroller = $internalauthcontroller;
+    }
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -102,6 +107,28 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/login');
+        $cookie_name = env('AUTH_COOKIE_NAME');
+        setcookie($cookie_name, '', [
+            'expires' => time() - 3600,
+            'domain' => env('AUTH_COOKIE_DOMAIN'),
+            'secure' => !(in_array(env('AUTH_COOKIE_DOMAIN'), ['localhost', '127.0.0.1'])),
+        ]);
+        $_COOKIE[$cookie_name] = null;
+
+        return redirect('/');
+    }
+    public function logoutApi(Request $request) {
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        $cookie_name = env('AUTH_COOKIE_NAME');
+        setcookie($cookie_name, '', [
+            'expires' => time() - 3600,
+            'domain' => env('AUTH_COOKIE_DOMAIN'),
+            'secure' => !(in_array(env('AUTH_COOKIE_DOMAIN'), ['localhost', '127.0.0.1'])),
+        ]);
+        $_COOKIE[$cookie_name] = null;
     }
 }
