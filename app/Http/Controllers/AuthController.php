@@ -113,7 +113,6 @@ class AuthController extends Controller
             'domain' => env('AUTH_COOKIE_DOMAIN'),
             'secure' => !(in_array(env('AUTH_COOKIE_DOMAIN'), ['localhost', '127.0.0.1'])),
         ]);
-        $_COOKIE[$cookie_name] = null;
 
         return redirect('/');
     }
