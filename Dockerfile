@@ -46,7 +46,12 @@ COPY --from=frontend-builder /app/public public
 # Install PHP dependencies
 RUN composer install --optimize-autoloader --no-dev
 
-# Clear Laravel caches and set up storage symlinks
+# Clear Laravel cache
+RUN php artisan config:clear \
+    && php artisan route:clear \
+    && php artisan view:clear
+
+# Set up storage symlinks
 RUN php artisan config:cache \
     && php artisan route:cache \
     && php artisan view:cache \
