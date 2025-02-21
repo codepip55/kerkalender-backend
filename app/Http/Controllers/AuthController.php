@@ -107,12 +107,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        $cookie_name = env('AUTH_COOKIE_NAME');
-        setcookie($cookie_name, '', [
-            'expires' => time() - 3600,
-            'domain' => env('AUTH_COOKIE_DOMAIN'),
-            'secure' => !(in_array(env('AUTH_COOKIE_DOMAIN'), ['localhost', '127.0.0.1'])),
-        ]);
+        $this->internalauthcontroller->removeRefreshCookie();
 
         return redirect('/');
     }
@@ -122,12 +117,6 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        $cookie_name = env('AUTH_COOKIE_NAME');
-        setcookie($cookie_name, '', [
-            'expires' => time() - 3600,
-            'domain' => env('AUTH_COOKIE_DOMAIN'),
-            'secure' => !(in_array(env('AUTH_COOKIE_DOMAIN'), ['localhost', '127.0.0.1'])),
-        ]);
-        $_COOKIE[$cookie_name] = null;
+        $this->internalauthcontroller->removeRefreshCookie();
     }
 }
