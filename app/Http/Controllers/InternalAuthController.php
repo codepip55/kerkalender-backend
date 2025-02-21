@@ -28,7 +28,16 @@ class InternalAuthController extends Controller
         $payload = [ 'sub' => $req_data['user']['id'] ];
         $refresh_token= $req_data['refreshToken'];
 
-        $this->setRefreshCookie($refresh_token);
+        $cookie = cookie(
+            env('AUTH_COOKIE_NAME'),
+            $refresh_token,
+            30 * 24 * 60,
+            null,
+            env('AUTH_COOKIE_DOMAIN'),
+            env('AUTH_COOKIE_DOMAIN') !== 'localhost',
+            true,
+            false,
+            'None');
 
         $payload = JWTAuth::getPayloadFactory()->customClaims($payload)->make();
         $token = JWTAuth::encode($payload)->get();
@@ -38,7 +47,7 @@ class InternalAuthController extends Controller
             'user' => $req_data['user'],
             'token' => $token,
             'expires_in' => $expires_in,
-        ]);
+        ])->cookie($cookie);
     }
     // Redirect user to the provider's authentication page
     public function redirect(Request $request) {
@@ -126,7 +135,16 @@ class InternalAuthController extends Controller
         $new_refresh_token= $user['refreshToken'];
 
         // Set new refresh token
-        $this->setRefreshCookie($new_refresh_token);
+        $cookie = cookie(
+            env('AUTH_COOKIE_NAME'),
+            $refresh_token,
+            30 * 24 * 60,
+            null,
+            env('AUTH_COOKIE_DOMAIN'),
+            env('AUTH_COOKIE_DOMAIN') !== 'localhost',
+            true,
+            false,
+            'None');
 
         $payload = JWTAuth::getPayloadFactory()->customClaims($payload)->make();
         $token = JWTAuth::encode($payload)->get();
@@ -136,40 +154,18 @@ class InternalAuthController extends Controller
             'user' => $user['user'],
             'token' => $token,
             'expires_in' => $expires_in,
-        ]);
-    }
-    private function setRefreshCookie(string $refresh_token) {
-        // Make POST request to COOKIE_SERVER_URL with refresh_token in body
-        if ($refresh_token === null) {
-            return error_log('Error: Refresh token is null');
-        }
-//        $response = Http::post(env('COOKIE_SERVER_URL').'/set-refresh-cookie', [
-//            'refresh_token' => $refresh_token
-//        ]);
-        setcookie(
-            env('AUTH_COOKIE_NAME'),
-            $refresh_token,
-            time() + 60 * 60 * 24 * 30, // 30 days
-            '/',
-            env('COOKIE_DOMAIN'),
-            true,
-            true
-        );
-
-//        if ($response->successful()) {
-//            return true;
-//        } else {
-//            return false;
-//        }
+        ])->cookie($cookie);
     }
     public function removeRefreshCookie() {
-        // Make DELETE request to COOKIE_SERVER_URL
-        $response = Http::delete(env('COOKIE_SERVER_URL').'/delete-refresh-cookie');
-
-        if ($response->successful()) {
-            return true;
-        } else {
-            return false;
-        }
+        setcookie(
+            env('AUTH_COOKIE_NAME'),
+            '', [
+                'expires' => time() - 3600,
+                'path' => '/',
+                'domain' => env('AUTH_COOKIE_DOMAIN'),
+                'secure' => env('AUTH_COOKIE_DOMAIN') !== 'localhost',
+                'httponly' => true,
+                'samesite' => 'None'
+            ]);
     }
 }
