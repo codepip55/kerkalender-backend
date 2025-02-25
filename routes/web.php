@@ -10,9 +10,9 @@ Route::get('/profile', [PagesController::class, 'getProfile'])->middleware('auth
 Route::get('/login', [PagesController::class, 'getLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [PagesController::class, 'getRegister'])->name('register');
-Route::post('/register', [AuthController::class, 'register'])->name('register');
+Route::post('/register', [AuthController::class, 'register']);
 Route::get('/change-password', [PagesController::class, 'getChangePassword'])->name('change-password');
-Route::post('/change-password', [AuthController::class, 'changePassword'])->name('change-password');
+Route::post('/change-password', [AuthController::class, 'changePassword']);
 Route::get('/forgot-password', [PagesController::class, 'getForgotPassword'])->name('password.email');
 Route::post('/forgot-password', [AuthController::class, 'resetPassword'])->name('password.reset');
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
