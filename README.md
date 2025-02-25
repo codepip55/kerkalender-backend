@@ -9,6 +9,18 @@ TODO:
 
 description
 
+```bash
+php artisan config:clear \
+    && php artisan route:clear \
+    && php artisan view:clear
+
+# Set up storage symlinks
+php artisan config:cache \
+    && php artisan route:cache \
+    && php artisan view:cache \
+    && php artisan storage:link
+````
+
 ## OAuth2 Clients
 
 To create a client run the following command:

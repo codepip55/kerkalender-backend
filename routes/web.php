@@ -8,7 +8,7 @@ Route::get('/', [PagesController::class, 'getIndex'])->name('home');
 Route::get('/profile', [PagesController::class, 'getProfile'])->middleware('auth', 'verified')->name('profile');
 
 Route::get('/login', [PagesController::class, 'getLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [PagesController::class, 'getRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
 Route::get('/change-password', [PagesController::class, 'getChangePassword'])->name('change-password');
