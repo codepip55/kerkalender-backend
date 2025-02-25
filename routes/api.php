@@ -6,7 +6,7 @@ use App\Http\Controllers\InternalAuthController;
 use App\Http\Controllers\AuthController;
 
 // Internal Auth
-Route::get('/auth/kerkalender', [InternalAuthController::class, 'login']);
+Route::get('/auth/kerkalender', [InternalAuthController::class, 'login'])->middleware('web');
 Route::get('/auth/silent', [InternalAuthController::class, 'silentAuth'])->middleware('web');
 Route::get('/auth/logout', [AuthController::class, 'logoutApi'])->middleware('web');
 

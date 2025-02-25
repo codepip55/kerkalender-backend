@@ -47,7 +47,7 @@ class InternalAuthController extends Controller
             'user' => $req_data['user'],
             'token' => $token,
             'expires_in' => $expires_in,
-        ])->cookie($cookie);
+        ])->withCookie($cookie);
     }
     // Redirect user to the provider's authentication page
     public function redirect(Request $request) {
