@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use function Laravel\Prompts\error;
 
 class AuthController extends Controller
 {
@@ -102,7 +103,7 @@ class AuthController extends Controller
             : back()->withErrors(['email' => "Er is iets misgegaan bij het wijzigen van je wachtwoord."]);
     }
     public function logout(Request $request) {
-        $this->removeRefreshToken();
+        $this->removeRefreshToken($request->user()->id);
 
         Auth::logout();
 
@@ -112,15 +113,15 @@ class AuthController extends Controller
         return redirect('/');
     }
     public function logoutApi(Request $request) {
-        $this->removeRefreshToken();
+        logger('logoutApi');
+        $this->removeRefreshToken($request->user()->id);
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
     }
-    private function removeRefreshToken() {
-        error_log(auth()->user());
-        $user = User::find(Auth::user()->id);
+    private function removeRefreshToken($user_id) {
+        $user = User::find($user_id);
         $user->refreshToken = '';
         $user->save();
     }
