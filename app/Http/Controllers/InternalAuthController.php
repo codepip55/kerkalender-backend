@@ -28,16 +28,17 @@ class InternalAuthController extends Controller
         $payload = [ 'sub' => $req_data['user']['id'] ];
         $refresh_token= $req_data['refreshToken'];
 
-        $cookie = cookie(
-            env('AUTH_COOKIE_NAME'),
-            $refresh_token,
-            30 * 24 * 60,
-            null,
-            env('AUTH_COOKIE_DOMAIN'),
-            env('AUTH_COOKIE_DOMAIN') !== 'localhost',
-            true,
-            false,
-            'None');
+//        $cookie = cookie(
+//            env('AUTH_COOKIE_NAME'),
+//            $refresh_token,
+//            30 * 24 * 60,
+//            null,
+//            env('AUTH_COOKIE_DOMAIN'),
+//            env('AUTH_COOKIE_DOMAIN') !== 'localhost',
+//            true,
+//            false,
+//            'None');
+        $this->setRefreshTokenOnUser($req_data['user'], $refresh_token);
 
         $payload = JWTAuth::getPayloadFactory()->customClaims($payload)->make();
         $token = JWTAuth::encode($payload)->get();
@@ -47,7 +48,7 @@ class InternalAuthController extends Controller
             'user' => $req_data['user'],
             'token' => $token,
             'expires_in' => $expires_in,
-        ])->withCookie($cookie);
+        ]);
     }
     // Redirect user to the provider's authentication page
     public function redirect(Request $request) {
@@ -101,9 +102,8 @@ class InternalAuthController extends Controller
         ]);
     }
     public function silentAuth() {
-        $cookie_name = env('AUTH_COOKIE_NAME');
         try {
-            $refresh_token = $_COOKIE[$cookie_name];
+            $refresh_token = $this->getRefreshTokenFromUser(auth()->user());
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Unauthorized'
@@ -135,16 +135,7 @@ class InternalAuthController extends Controller
         $new_refresh_token= $user['refreshToken'];
 
         // Set new refresh token
-        $cookie = cookie(
-            env('AUTH_COOKIE_NAME'),
-            $refresh_token,
-            30 * 24 * 60,
-            null,
-            env('AUTH_COOKIE_DOMAIN'),
-            env('AUTH_COOKIE_DOMAIN') !== 'localhost',
-            true,
-            false,
-            'None');
+        $this->setRefreshTokenOnUser($user['user'], $new_refresh_token);
 
         $payload = JWTAuth::getPayloadFactory()->customClaims($payload)->make();
         $token = JWTAuth::encode($payload)->get();
@@ -154,18 +145,13 @@ class InternalAuthController extends Controller
             'user' => $user['user'],
             'token' => $token,
             'expires_in' => $expires_in,
-        ])->cookie($cookie);
+        ]);
     }
-    public function removeRefreshCookie() {
-        setcookie(
-            env('AUTH_COOKIE_NAME'),
-            '', [
-                'expires' => time() - 3600,
-                'path' => '/',
-                'domain' => env('AUTH_COOKIE_DOMAIN'),
-                'secure' => env('AUTH_COOKIE_DOMAIN') !== 'localhost',
-                'httponly' => true,
-                'samesite' => 'None'
-            ]);
+    private function setRefreshTokenOnUser($user, $refreshToken) {
+        $user->refreshToken = $refreshToken;
+        $user->save();
+    }
+    private function getRefreshTokenFromUser($user) {
+        return $user->refreshToken;
     }
 }
