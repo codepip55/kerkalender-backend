@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
@@ -28,17 +29,7 @@ class InternalAuthController extends Controller
         $payload = [ 'sub' => $req_data['user']['id'] ];
         $refresh_token= $req_data['refreshToken'];
 
-//        $cookie = cookie(
-//            env('AUTH_COOKIE_NAME'),
-//            $refresh_token,
-//            30 * 24 * 60,
-//            null,
-//            env('AUTH_COOKIE_DOMAIN'),
-//            env('AUTH_COOKIE_DOMAIN') !== 'localhost',
-//            true,
-//            false,
-//            'None');
-        $this->setRefreshTokenOnUser($req_data['user'], $refresh_token);
+        $this->setRefreshTokenOnUser($req_data['user']['id'], $refresh_token);
 
         $payload = JWTAuth::getPayloadFactory()->customClaims($payload)->make();
         $token = JWTAuth::encode($payload)->get();
@@ -103,7 +94,7 @@ class InternalAuthController extends Controller
     }
     public function silentAuth() {
         try {
-            $refresh_token = $this->getRefreshTokenFromUser(auth()->user());
+            $refresh_token = $this->getRefreshTokenFromUser(auth()->user()->id);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Unauthorized'
@@ -129,13 +120,15 @@ class InternalAuthController extends Controller
         }
 
         $user = $this->validate($creds['access_token'], $creds['refresh_token']);
+        // Convert json to array
+        $user = json_decode($user->content(), true);
 
         // Sign token
         $payload = [ 'sub' => $user['user']['id'] ];
         $new_refresh_token= $user['refreshToken'];
 
         // Set new refresh token
-        $this->setRefreshTokenOnUser($user['user'], $new_refresh_token);
+        $this->setRefreshTokenOnUser($user['user']['id'], $new_refresh_token);
 
         $payload = JWTAuth::getPayloadFactory()->customClaims($payload)->make();
         $token = JWTAuth::encode($payload)->get();
@@ -147,11 +140,18 @@ class InternalAuthController extends Controller
             'expires_in' => $expires_in,
         ]);
     }
-    private function setRefreshTokenOnUser($user, $refreshToken) {
+    public function setRefreshTokenOnUser(string $user_id, string $refreshToken) {
+        $user = User::find($user_id);
         $user->refreshToken = $refreshToken;
         $user->save();
     }
-    private function getRefreshTokenFromUser($user) {
+    private function getRefreshTokenFromUser(string $user_id) {
+        $user = User::find($user_id);
         return $user->refreshToken;
+    }
+    public function removeRefreshTokenFromUser(string $user_id) {
+        $user = User::find($user_id);
+        $user->refreshToken = '';
+        $user->save();
     }
 }
