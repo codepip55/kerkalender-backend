@@ -103,7 +103,7 @@ class AuthController extends Controller
             : back()->withErrors(['email' => "Er is iets misgegaan bij het wijzigen van je wachtwoord."]);
     }
     public function logout(Request $request) {
-        $this->removeRefreshToken($request->user()->id);
+        $this->internalauthcontroller->clearRefreshToken();
 
         Auth::logout();
 
@@ -113,16 +113,10 @@ class AuthController extends Controller
         return redirect('/');
     }
     public function logoutApi(Request $request) {
-        logger('logoutApi');
-        $this->removeRefreshToken($request->user()->id);
+        $this->internalauthcontroller->clearRefreshToken();
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-    }
-    private function removeRefreshToken($user_id) {
-        $user = User::find($user_id);
-        $user->refreshToken = '';
-        $user->save();
     }
 }
