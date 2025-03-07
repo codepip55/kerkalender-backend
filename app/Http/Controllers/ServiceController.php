@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Service;
+use App\Models\Setlist;
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller
@@ -39,7 +40,7 @@ class ServiceController extends Controller
 
     /**
      * Create service
-     * Request requires: date, start_time, end_time, location, notes, service_manager_id, setlist_id, teams
+     * Request requires: date, start_time, end_time, location, notes, service_manager_id, teams
      * Response: service
      */
     public function createService(Request $request) {
@@ -51,7 +52,6 @@ class ServiceController extends Controller
             'location' => 'required',
             'notes' => 'required',
             'service_manager_id' => 'required',
-            'setlist_id' => 'required',
             'teams' => 'required'
         ]);
         // Create service
@@ -62,8 +62,11 @@ class ServiceController extends Controller
         $service->location = $request->location;
         $service->notes = $request->notes;
         $service->service_manager_id = $request->service_manager_id;
-        $service->setlist_id = $request->setlist_id;
         $service->teams()->attach($request->teams);
+
+        // Create new setlist and attach to service
+        $setlist = new Setlist();
+        $setlist->service_id = $service->id;
 
         $service->save();
 

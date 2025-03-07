@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InternalAuthController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ServiceController;
 
 // Internal Auth
 Route::get('/auth/kerkalender', [InternalAuthController::class, 'login'])->middleware('web');
@@ -15,3 +16,4 @@ Route::get('/user/bearer', function (Request $request) {
 })->middleware('auth:api');
 
 // API Routes
+Route::post('/services', [ServiceController::class, 'createService'])->middleware('auth:api');
