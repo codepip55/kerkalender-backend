@@ -44,6 +44,7 @@ class ServiceController extends Controller
      * Response: service
      */
     public function createService(Request $request) {
+        error_log($request);
         // Check if request has required fields
         $request->validate([
             'date' => 'required',
