@@ -44,36 +44,39 @@ class ServiceController extends Controller
      * Response: service
      */
     public function createService(Request $request) {
-        return response()->json([
-            'message' => 'Service created successfully',
+        // Check if request has required fields
+        $request->validate([
+            'title' => 'required',
+            'date' => 'required',
+            'start_time' => 'required',
+            'end_time' => 'required',
+            'location' => 'required',
+            'notes' => 'required',
+            'service_manager_id' => 'required',
+            'teams' => 'nullable'
         ]);
-//        // Check if request has required fields
-//        $request->validate([
-//            'date' => 'required',
-//            'start_time' => 'required',
-//            'end_time' => 'required',
-//            'location' => 'required',
-//            'notes' => 'required',
-//            'service_manager_id' => 'required',
-//            'teams' => 'required'
-//        ]);
-//        // Create service
-//        $service = new Service();
-//        $service->date = $request->date;
-//        $service->start_time = $request->start_time;
-//        $service->end_time = $request->end_time;
-//        $service->location = $request->location;
-//        $service->notes = $request->notes;
-//        $service->service_manager_id = $request->service_manager_id;
-//        $service->teams()->attach($request->teams);
-//
-//        // Create new setlist and attach to service
-//        $setlist = new Setlist();
-//        $setlist->service_id = $service->id;
-//
-//        $service->save();
-//
-//        return $service;
+        // Create service
+        $service = new Service();
+        $service->title = $request->title;
+        $service->date = $request->date;
+        $service->start_time = $request->start_time;
+        $service->end_time = $request->end_time;
+        $service->location = $request->location;
+        $service->notes = $request->notes;
+        $service->service_manager_id = $request->service_manager_id;
+
+        // For each team, attach to service
+        foreach ($request->teams as $team) {
+            $service->teams()->create($team);
+        }
+
+        // Create new setlist and attach to service
+        $setlist = new Setlist();
+        $setlist->service_id = $service->id;
+
+        $service->save();
+
+        return $service;
     }
     /**
      * PUT service

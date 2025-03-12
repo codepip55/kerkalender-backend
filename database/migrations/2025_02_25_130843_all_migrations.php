@@ -47,6 +47,7 @@ return new class extends Migration {
         // Create services table
         Schema::create('services', function (Blueprint $table) {
             $table->id();
+            $table->string('title');
             $table->date('date');
             $table->time('start_time')->nullable();
             $table->time('end_time')->nullable();
