@@ -16,4 +16,5 @@ Route::get('/user/bearer', function (Request $request) {
 })->middleware('auth:api');
 
 // API Routes
-Route::post('/services', [ServiceController::class, 'createService'])->middleware('auth:api');
+Route::get('/services', [ServiceController::class, 'findServices'])->middleware('auth:jwt-custom');
+Route::post('/services', [ServiceController::class, 'createService'])->middleware('auth:jwt-custom');
