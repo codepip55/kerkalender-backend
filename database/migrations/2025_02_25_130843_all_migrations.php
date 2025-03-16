@@ -41,6 +41,7 @@ return new class extends Migration {
         // Create setlists table
         Schema::create('setlists', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('service_id')->constrained('services')->onDelete('cascade');
             $table->timestamps();
         });
 

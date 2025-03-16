@@ -17,4 +17,7 @@ Route::get('/user/bearer', function (Request $request) {
 
 // API Routes
 Route::get('/services', [ServiceController::class, 'findServices'])->middleware('auth:jwt-custom');
+Route::get('/services/{service_id}', [ServiceController::class, 'findServiceById'])->middleware('auth:jwt-custom');
 Route::post('/services', [ServiceController::class, 'createService'])->middleware('auth:jwt-custom');
+Route::put('/services/{service_id}', [ServiceController::class, 'updateService'])->middleware('auth:jwt-custom');
+Route::delete('/services/{service_id}', [ServiceController::class, 'deleteService'])->middleware('auth:jwt-custom');
