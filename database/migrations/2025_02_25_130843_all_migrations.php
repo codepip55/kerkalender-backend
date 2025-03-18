@@ -89,7 +89,7 @@ return new class extends Migration {
             $table->id();
             $table->string('title');
             $table->string('artist');
-            $table->string('spotify_id')->nullable();
+            $table->string('spotify_link')->nullable();
             $table->timestamps();
         });
 

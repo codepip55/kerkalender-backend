@@ -27,3 +27,4 @@ Route::delete('/services/{service_id}', [ServiceController::class, 'deleteServic
 // Setlist
 Route::get('/setlists/{setlist_id}', [SetlistController::class, 'findSetlistById'])->middleware('auth:jwt-custom');
 Route::get('/setlists/service/{service_id}', [SetlistController::class, 'findSetlistByServiceId'])->middleware('auth:jwt-custom');
+Route::put('/setlists/{setlist_id}', [SetlistController::class, 'updateSetlistById'])->middleware('auth:jwt-custom');

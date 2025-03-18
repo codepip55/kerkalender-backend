@@ -10,7 +10,7 @@ class Song extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
+        'title',
         'artist',
         'spotify_link'
     ];
