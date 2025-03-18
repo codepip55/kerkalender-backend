@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SetlistController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InternalAuthController;
@@ -16,8 +17,13 @@ Route::get('/user/bearer', function (Request $request) {
 })->middleware('auth:api');
 
 // API Routes
+// Services
 Route::get('/services', [ServiceController::class, 'findServices'])->middleware('auth:jwt-custom');
 Route::get('/services/{service_id}', [ServiceController::class, 'findServiceById'])->middleware('auth:jwt-custom');
 Route::post('/services', [ServiceController::class, 'createService'])->middleware('auth:jwt-custom');
 Route::put('/services/{service_id}', [ServiceController::class, 'updateService'])->middleware('auth:jwt-custom');
 Route::delete('/services/{service_id}', [ServiceController::class, 'deleteService'])->middleware('auth:jwt-custom');
+
+// Setlist
+Route::get('/setlists/{setlist_id}', [SetlistController::class, 'findSetlistById'])->middleware('auth:jwt-custom');
+Route::get('/setlists/service/{service_id}', [SetlistController::class, 'findSetlistByServiceId'])->middleware('auth:jwt-custom');
