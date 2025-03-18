@@ -139,24 +139,60 @@ class ServiceController extends Controller
             'location' => 'required',
             'notes' => 'required',
             'service_manager_id' => 'required',
-            'setlist_id' => 'required',
-            'teams' => 'required'
+            'teams' => 'nullable'
         ]);
         // Update service
-        $service = Service::find($request->id);
+        $service = Service::find($request->service_id);
+        // Throw error if service not found
+        if (!$service) {
+            return response()->json(['error' => 'Service not found'], 404);
+        }
+
+        $service->title = $request->title;
         $service->date = $request->date;
         $service->start_time = $request->start_time;
         $service->end_time = $request->end_time;
         $service->location = $request->location;
         $service->notes = $request->notes;
         $service->service_manager_id = $request->service_manager_id;
-        $service->setlist_id = $request->setlist_id;
-        $service->teams()->sync($request->teams);
+        $service->save();
+
+        // Reset teams
+        $service->teams()->delete();
 
         // For each team, attach to service
         foreach ($request->teams as $team) {
-            $service->teams()->create($team);
+            $service_team = new ServiceTeam();
+            $service_team->service_id = $service->id;
+            $service_team->name = $team['name'];
+            $service_team->save();
+
+            // For each position, attach to team
+            foreach ($team['positions'] as $position) {
+                $service_team_position = new Position();
+                $service_team_position->service_team_id = $service_team->id;
+                $service_team_position->name = $position['name'];
+                $service_team_position->save();
+
+                // Add to service_team
+                $service_team->positions()->save($service_team_position);
+
+                // For each member, attach to position
+//                foreach ($position['members'] as $member) {
+//                    $service_team_position_member = new PositionMember();
+//                    $service_team_position_member->position_id = $service_team_position->id;
+//                    $service_team_position_member->user_id = $member['user_id'];
+//                    $service_team_position_member->save();
+//
+//                    // Add to service_team_position
+//                    $service_team_position->members()->save($service_team_position_member);
+//                }
+            }
+
+            // Add to service
+            $service->teams()->save($service_team);
         }
+        $service->save();
 
         return $service;
     }
