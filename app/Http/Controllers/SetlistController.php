@@ -21,6 +21,7 @@ class SetlistController extends Controller
         }
 
         $setlist = Setlist::find($id);
+        $setlist->songs()->with('song')->get();
         return response()->json($setlist);
     }
     /**
@@ -33,11 +34,12 @@ class SetlistController extends Controller
             return response()->json(['error' => 'service_id is required']);
         }
 
-        $setlist = Setlist::where('service_id', $service_id)->get();
+        $setlist = Setlist::with('songs.song')->where('service_id', $service_id)->get();
         // If setlist is empty array, return error
         if (count($setlist) === 0) {
             return response()->json(['error' => 'Setlist not found'], 404);
         }
+
 
         return response()->json($setlist);
     }
