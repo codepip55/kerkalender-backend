@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use Laravel\Passport\RefreshTokenRepository;
+use Laravel\Passport\TokenRepository;
 use function Laravel\Prompts\error;
 
 class AuthController extends Controller
@@ -103,20 +105,23 @@ class AuthController extends Controller
             : back()->withErrors(['email' => "Er is iets misgegaan bij het wijzigen van je wachtwoord."]);
     }
     public function logout(Request $request) {
-        $this->internalauthcontroller->clearRefreshToken();
-
-        Auth::logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
+        $this->removeTokens($request);
         return redirect('/');
     }
     public function logoutApi(Request $request) {
+        $this->removeTokens($request);
+        return response()->json(['message' => 'Successfully logged out']);
+    }
+    private function removeTokens(Request $request) {
         $this->internalauthcontroller->clearRefreshToken();
         Auth::logout();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        $tokenRepository = app(TokenRepository::class);
+        $refreshTokenRepository = app(RefreshTokenRepository::class);
+
+        $tokenRepository->revokeAccessToken($request->user()->token());
+        $refreshTokenRepository->revokeRefreshTokensByAccessTokenId($request->user()->token()->id);
     }
 }

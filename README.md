@@ -3,7 +3,7 @@
 Left off here: https://laravel.com/docs/11.x/passport#requesting-tokens
 
 TODO:
-- [ ] 
+- [ ] Update migrations for new models - https://chatgpt.com/c/67cb6589-3904-8004-87ff-2c40f9493c8f
 
 # Kerkalender
 

@@ -2,8 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Position;
+use App\Models\PositionMember;
 use App\Models\Service;
+use App\Models\ServiceTeam;
+use App\Models\Setlist;
 use Illuminate\Http\Request;
+use function Laravel\Prompts\error;
+use function Pest\Laravel\json;
 
 class ServiceController extends Controller
 {
@@ -30,6 +36,15 @@ class ServiceController extends Controller
         return $query->get();
     }
     /**
+     * Get service by ID
+     */
+    public function findServiceById(Request $request) {
+        $service = $this->getService($request->service_id);
+        // Return service with teams and positions
+        $service->teams = $service->teams()->with('positions')->get();
+        return $service;
+    }
+    /**
      * Get service
      * Filter by service_id
      */
@@ -39,32 +54,72 @@ class ServiceController extends Controller
 
     /**
      * Create service
-     * Request requires: date, start_time, end_time, location, notes, service_manager_id, setlist_id, teams
+     * Request requires: date, start_time, end_time, location, notes, service_manager_id, teams
      * Response: service
      */
     public function createService(Request $request) {
         // Check if request has required fields
         $request->validate([
+            'title' => 'required',
             'date' => 'required',
             'start_time' => 'required',
             'end_time' => 'required',
             'location' => 'required',
             'notes' => 'required',
             'service_manager_id' => 'required',
-            'setlist_id' => 'required',
-            'teams' => 'required'
+            'teams' => 'nullable'
         ]);
         // Create service
         $service = new Service();
+        $service->title = $request->title;
         $service->date = $request->date;
         $service->start_time = $request->start_time;
         $service->end_time = $request->end_time;
         $service->location = $request->location;
         $service->notes = $request->notes;
         $service->service_manager_id = $request->service_manager_id;
-        $service->setlist_id = $request->setlist_id;
-        $service->teams()->attach($request->teams);
+        $service->save();
 
+        // For each team, attach to service
+        foreach ($request->teams as $team) {
+            $service_team = new ServiceTeam();
+            $service_team->service_id = $service->id;
+            $service_team->name = $team['name'];
+            $service_team->save();
+
+            // For each position, attach to team
+            foreach ($team['positions'] as $position) {
+                $service_team_position = new Position();
+                $service_team_position->service_team_id = $service_team->id;
+                $service_team_position->name = $position['name'];
+                $service_team_position->save();
+
+                // Add to service_team
+                $service_team->positions()->save($service_team_position);
+
+                // For each member, attach to position
+//                foreach ($position['members'] as $member) {
+//                    $service_team_position_member = new PositionMember();
+//                    $service_team_position_member->position_id = $service_team_position->id;
+//                    $service_team_position_member->user_id = $member['user_id'];
+//                    $service_team_position_member->save();
+//
+//                    // Add to service_team_position
+//                    $service_team_position->members()->save($service_team_position_member);
+//                }
+            }
+
+            // Add to service
+            $service->teams()->save($service_team);
+        }
+        $service->save();
+
+        // Create new setlist and attach to service
+        $setlist = new Setlist();
+        $setlist->service_id = $service->id;
+        $setlist->save();
+
+        $service->setlist_id = $setlist->id;
         $service->save();
 
         return $service;
@@ -77,26 +132,66 @@ class ServiceController extends Controller
     public function updateService(Request $request) {
         // Check if request has required fields
         $request->validate([
+            'title' => 'required',
             'date' => 'required',
             'start_time' => 'required',
             'end_time' => 'required',
             'location' => 'required',
             'notes' => 'required',
             'service_manager_id' => 'required',
-            'setlist_id' => 'required',
-            'teams' => 'required'
+            'teams' => 'nullable'
         ]);
         // Update service
-        $service = Service::find($request->id);
+        $service = Service::find($request->service_id);
+        // Throw error if service not found
+        if (!$service) {
+            return response()->json(['error' => 'Service not found'], 404);
+        }
+
+        $service->title = $request->title;
         $service->date = $request->date;
         $service->start_time = $request->start_time;
         $service->end_time = $request->end_time;
         $service->location = $request->location;
         $service->notes = $request->notes;
         $service->service_manager_id = $request->service_manager_id;
-        $service->setlist_id = $request->setlist_id;
-        $service->teams()->sync($request->teams);
+        $service->save();
 
+        // Reset teams
+        $service->teams()->delete();
+
+        // For each team, attach to service
+        foreach ($request->teams as $team) {
+            $service_team = new ServiceTeam();
+            $service_team->service_id = $service->id;
+            $service_team->name = $team['name'];
+            $service_team->save();
+
+            // For each position, attach to team
+            foreach ($team['positions'] as $position) {
+                $service_team_position = new Position();
+                $service_team_position->service_team_id = $service_team->id;
+                $service_team_position->name = $position['name'];
+                $service_team_position->save();
+
+                // Add to service_team
+                $service_team->positions()->save($service_team_position);
+
+                // For each member, attach to position
+//                foreach ($position['members'] as $member) {
+//                    $service_team_position_member = new PositionMember();
+//                    $service_team_position_member->position_id = $service_team_position->id;
+//                    $service_team_position_member->user_id = $member['user_id'];
+//                    $service_team_position_member->save();
+//
+//                    // Add to service_team_position
+//                    $service_team_position->members()->save($service_team_position_member);
+//                }
+            }
+
+            // Add to service
+            $service->teams()->save($service_team);
+        }
         $service->save();
 
         return $service;

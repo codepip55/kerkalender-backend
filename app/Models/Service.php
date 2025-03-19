@@ -10,6 +10,7 @@ class Service extends Model
     use HasFactory;
 
     protected $fillable = [
+        'title',
         'date',
         'start_time',
         'end_time',
@@ -24,13 +25,11 @@ class Service extends Model
     }
     public function setlist()
     {
-        return $this->hasOne(Setlist::class);
+        return $this->hasOne(Setlist::class, 'setlist_id');
     }
     public function teams()
     {
-        return $this->belongsToMany(Team::class)
-            ->withPivot('user_id', 'status')
-            ->withTimestamps();
+        return $this->hasMany(ServiceTeam::class);
     }
 
 }

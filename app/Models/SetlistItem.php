@@ -14,7 +14,7 @@ class SetlistItem extends Model
         'song_id',
         'key',
         'vocal_notes',
-        'band_note'
+        'band_notes'
     ];
 
     public function setlist()
