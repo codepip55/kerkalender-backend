@@ -65,7 +65,7 @@ class SetlistController extends Controller
      */
     public function updateSetlistById(Request $request) {
         $request->validate([
-            'songs' => 'required'
+            'songs' => 'nullable|array',
         ]);
         // Check required fields
         if (!$request->setlist_id) {
@@ -77,6 +77,8 @@ class SetlistController extends Controller
             return response()->json(['error' => 'Setlist not found'], 404);
         }
 
+        // Reset songs
+        $setlist->songs()->delete();
         // Loop over songs
         foreach ($request->songs as $song) {
             $setlist_item = new SetlistItem();
