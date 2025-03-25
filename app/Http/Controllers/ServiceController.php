@@ -40,8 +40,8 @@ class ServiceController extends Controller
      */
     public function findServiceById(Request $request) {
         $service = $this->getService($request->service_id);
-        // Return service with teams and positions
-        $service->teams = $service->teams()->with('positions')->get();
+        // Return service with teams and positions with members
+        $service->load('teams.positions.members');
         return $service;
     }
     /**
@@ -94,19 +94,20 @@ class ServiceController extends Controller
                 $service_team_position->name = $position['name'];
                 $service_team_position->save();
 
+                // For each member, attach to position
+                foreach ($position['members'] as $member) {
+                    $service_team_position_member = new PositionMember();
+                    $service_team_position_member->position_id = $service_team_position->id;
+                    $service_team_position_member->user_id = $member['user_id'];
+                    $service_team_position_member->status = $member['status'];
+                    $service_team_position_member->save();
+
+                    // Add to service_team_position
+                    $service_team_position->members()->save($service_team_position_member);
+                }
+
                 // Add to service_team
                 $service_team->positions()->save($service_team_position);
-
-                // For each member, attach to position
-//                foreach ($position['members'] as $member) {
-//                    $service_team_position_member = new PositionMember();
-//                    $service_team_position_member->position_id = $service_team_position->id;
-//                    $service_team_position_member->user_id = $member['user_id'];
-//                    $service_team_position_member->save();
-//
-//                    // Add to service_team_position
-//                    $service_team_position->members()->save($service_team_position_member);
-//                }
             }
 
             // Add to service
@@ -174,19 +175,20 @@ class ServiceController extends Controller
                 $service_team_position->name = $position['name'];
                 $service_team_position->save();
 
+                // For each member, attach to position
+                foreach ($position['members'] as $member) {
+                    $service_team_position_member = new PositionMember();
+                    $service_team_position_member->position_id = $service_team_position->id;
+                    $service_team_position_member->user_id = $member['user_id'];
+                    $service_team_position_member->status = $member['status'];
+                    $service_team_position_member->save();
+
+                    // Add to service_team_position
+                    $service_team_position->members()->save($service_team_position_member);
+                }
+
                 // Add to service_team
                 $service_team->positions()->save($service_team_position);
-
-                // For each member, attach to position
-//                foreach ($position['members'] as $member) {
-//                    $service_team_position_member = new PositionMember();
-//                    $service_team_position_member->position_id = $service_team_position->id;
-//                    $service_team_position_member->user_id = $member['user_id'];
-//                    $service_team_position_member->save();
-//
-//                    // Add to service_team_position
-//                    $service_team_position->members()->save($service_team_position_member);
-//                }
             }
 
             // Add to service
