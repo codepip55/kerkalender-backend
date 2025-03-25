@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\SetlistController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InternalAuthController;
@@ -28,3 +29,6 @@ Route::delete('/services/{service_id}', [ServiceController::class, 'deleteServic
 Route::get('/setlists/{setlist_id}', [SetlistController::class, 'findSetlistById'])->middleware('auth:jwt-custom');
 Route::get('/setlists/service/{service_id}', [SetlistController::class, 'findSetlistByServiceId'])->middleware('auth:jwt-custom');
 Route::put('/setlists/{setlist_id}', [SetlistController::class, 'updateSetlistById'])->middleware('auth:jwt-custom');
+
+// Users
+Route::get('/users', [UserController::class, 'findUsers'])->middleware('auth:jwt-custom');
