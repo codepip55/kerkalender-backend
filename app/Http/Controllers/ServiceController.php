@@ -2,12 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\NotificationMail;
 use App\Models\Position;
 use App\Models\PositionMember;
 use App\Models\Service;
 use App\Models\ServiceTeam;
 use App\Models\Setlist;
+use App\Models\Team;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use function Laravel\Prompts\error;
 use function Pest\Laravel\json;
 
@@ -123,6 +128,8 @@ class ServiceController extends Controller
         $service->setlist_id = $setlist->id;
         $service->save();
 
+        $service->load('teams.positions.members');
+
         return $service;
     }
     /**
@@ -131,7 +138,7 @@ class ServiceController extends Controller
      * Response: service
      */
     public function updateService(Request $request) {
-        // Check if request has required fields
+        // Validate input
         $request->validate([
             'title' => 'required',
             'date' => 'required',
@@ -142,62 +149,205 @@ class ServiceController extends Controller
             'service_manager_id' => 'required',
             'teams' => 'nullable'
         ]);
-        // Update service
+
+        // Find service
         $service = Service::find($request->service_id);
-        // Throw error if service not found
         if (!$service) {
             return response()->json(['error' => 'Service not found'], 404);
         }
 
-        $service->title = $request->title;
-        $service->date = $request->date;
-        $service->start_time = $request->start_time;
-        $service->end_time = $request->end_time;
-        $service->location = $request->location;
-        $service->notes = $request->notes;
-        $service->service_manager_id = $request->service_manager_id;
-        $service->save();
+        // Update service
+        $service->update([
+            'title' => $request->title,
+            'date' => $request->date,
+            'start_time' => $request->start_time,
+            'end_time' => $request->end_time,
+            'location' => $request->location,
+            'notes' => $request->notes,
+            'service_manager_id' => $request->service_manager_id,
+        ]);
 
-        // Reset teams
-        $service->teams()->delete();
+        // Load current teams, positions, and members
+        $service->load('teams.positions.members');
+        $current_members = [];
 
-        // For each team, attach to service
+        foreach ($service->teams as $team) {
+            foreach ($team->positions as $position) {
+                foreach ($position->members as $member) {
+                    $current_members[$member->user_id] = [
+                        'user_id' => $member->user_id,
+                        'team_id' => $team->id,
+                        'position_id' => $position->id,
+                        'status' => $member->status
+                    ];
+                }
+            }
+        }
+
+        Log::info('current members '.json_encode($current_members));
+
+        // Track new members after update
+        $new_members = [];
+
         foreach ($request->teams as $team) {
-            $service_team = new ServiceTeam();
-            $service_team->service_id = $service->id;
-            $service_team->name = $team['name'];
-            $service_team->save();
+            Log::info('team '.json_encode($team));
+            // Check if the team already exists in the service
+            $service_team = ServiceTeam::where('service_id', $service->id)
+                ->where('name', $team['name'])
+                ->first();
 
-            // For each position, attach to team
+            // If not found, create a new team
+            if (!$service_team) {
+                $service_team = new ServiceTeam();
+                $service_team->service_id = $service->id;
+                $service_team->name = $team['name'];
+                $service_team->save();
+            }
+
             foreach ($team['positions'] as $position) {
-                $service_team_position = new Position();
-                $service_team_position->service_team_id = $service_team->id;
-                $service_team_position->name = $position['name'];
-                $service_team_position->save();
+                Log::info('position '.json_encode($position));
+                // Check if the position already exists within this service team
+                $service_team_position = Position::where('service_team_id', $service_team->id)
+                    ->where('name', $position['name'])
+                    ->first();
 
-                // For each member, attach to position
-                foreach ($position['members'] as $member) {
-                    $service_team_position_member = new PositionMember();
-                    $service_team_position_member->position_id = $service_team_position->id;
-                    $service_team_position_member->user_id = $member['user_id'];
-                    $service_team_position_member->status = $member['status'];
-                    $service_team_position_member->save();
-
-                    // Add to service_team_position
-                    $service_team_position->members()->save($service_team_position_member);
+                // If not found, create a new position
+                if (!$service_team_position) {
+                    $service_team_position = new Position();
+                    $service_team_position->service_team_id = $service_team->id;
+                    $service_team_position->name = $position['name'];
+                    $service_team_position->save();
                 }
 
-                // Add to service_team
+                foreach ($position['members'] as $member) {
+                    Log::info('position member '.json_encode($member));
+                    // Check if the position member already exists
+                    $service_team_position_member = PositionMember::where('position_id', $service_team_position->id)
+                        ->where('user_id', $member['user_id'])
+                        ->first();
+
+                    if (!$service_team_position_member) {
+                        // If not found, create a new position member
+                        $service_team_position_member = new PositionMember();
+                        $service_team_position_member->position_id = $service_team_position->id;
+                        $service_team_position_member->user_id = $member['user_id'];
+                        $service_team_position_member->status = $member['status'];
+                        $service_team_position_member->save();
+                    } else {
+                        // If the member already exists, you might want to update the status (if necessary)
+                        $service_team_position_member->status = $member['status'];
+                        $service_team_position_member->save();
+                    }
+
+                    // Attach the position member to the position
+                    $service_team_position->members()->save($service_team_position_member);
+
+                    // Store new member data
+                    $new_members[$member['user_id']] = [
+                        'user_id' => $member['user_id'],
+                        'team_id' => $service_team->id,
+                        'position_id' => $service_team_position->id,
+                        'status' => $member['status']
+                    ];
+                }
+
+                // Save the updated position
                 $service_team->positions()->save($service_team_position);
             }
 
-            // Add to service
+            // Save the updated team
             $service->teams()->save($service_team);
         }
+
+        // Remove any teams, positions, or members that are not in request
+        foreach ($service->teams as $team) {
+            $found = false;
+            foreach ($request->teams as $new_team) {
+                if ($team->name == $new_team['name']) {
+                    $found = true;
+                    break;
+                }
+            }
+
+            if (!$found) {
+                // Remove team
+                $team->delete();
+            } else {
+                foreach ($team->positions as $position) {
+                    $found = false;
+                    foreach ($new_team['positions'] as $new_position) {
+                        if ($position->name == $new_position['name']) {
+                            $found = true;
+                            break;
+                        }
+                    }
+
+                    if (!$found) {
+                        // Remove position
+                        $position->delete();
+                    } else {
+                        foreach ($position->members as $member) {
+                            $found = false;
+                            foreach ($new_position['members'] as $new_member) {
+                                if ($member->user_id == $new_member['user_id']) {
+                                    $found = true;
+                                    break;
+                                }
+                            }
+
+                            if (!$found) {
+                                // Remove member
+                                $member->delete();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         $service->save();
 
+        // Compare old vs. new members to detect changes
+        $changed_members = [];
+
+        foreach ($new_members as $member) {
+            Log::info('member '.json_encode($member));
+//            Log::info('member 2 '.json_encode($current_members[$member['user_id']]));
+            // Check if member is in current members with same team and position
+            if (isset($current_members[$member['user_id']])) {
+                Log::info('current member '.json_encode($current_members[$member['user_id']]));
+                Log::info('new member '.json_encode($member));
+                if ($current_members[$member['user_id']] != $member) {
+                    $changed_members[$member['user_id']] = $member;
+                }
+            } else {
+                $changed_members[$member['user_id']] = $member;
+            }
+        }
+
+        Log::info('changed members '.json_encode($changed_members));
+        // Send notification email for affected users
+        foreach ($changed_members as $user_id => $member_data) {
+            $user = User::find($user_id);
+            $team = ServiceTeam::find($member_data['team_id']);
+            $position = Position::find($member_data['position_id']);
+            $confirmationLink = url('/dashboard');
+
+            if ($user && $team && $position) {
+                Mail::to($user->email)->send(new NotificationMail(
+                    $user,
+                    $service,
+                    $team,
+                    $position,
+                    $confirmationLink
+                ));
+            }
+        }
+
+        $service->load('teams.positions.members');
         return $service;
     }
+
 
     /**
      * Delete service
