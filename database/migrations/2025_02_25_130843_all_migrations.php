@@ -41,8 +41,6 @@ return new class extends Migration {
         // Create setlists table
         Schema::create('setlists', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('service_id')->constrained('services')->onDelete('cascade');
-
             $table->timestamps();
         });
 
@@ -58,6 +56,11 @@ return new class extends Migration {
             $table->foreignId('service_manager_id')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('setlist_id')->nullable()->constrained('setlists')->onDelete('cascade');
             $table->timestamps();
+        });
+
+        // After creating the tables, you can add the `service_id` foreign key to `setlists` later
+        Schema::table('setlists', function (Blueprint $table) {
+            $table->foreignId('service_id')->constrained('services')->onDelete('cascade');
         });
 
         // Create service_teams table (teams within a specific service)
