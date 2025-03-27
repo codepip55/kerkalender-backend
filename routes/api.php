@@ -25,6 +25,10 @@ Route::post('/services', [ServiceController::class, 'createService'])->middlewar
 Route::put('/services/{service_id}', [ServiceController::class, 'updateService'])->middleware('auth:jwt-custom');
 Route::delete('/services/{service_id}', [ServiceController::class, 'deleteService'])->middleware('auth:jwt-custom');
 
+// Requests
+Route::get('/requests/{user_id}', [ServiceController::class, 'findUserRequests'])->middleware('auth:jwt-custom');
+Route::post('/requests', [ServiceController::class, 'updateStatus'])->middleware('auth:jwt-custom');
+
 // Setlist
 Route::get('/setlists/{setlist_id}', [SetlistController::class, 'findSetlistById'])->middleware('auth:jwt-custom');
 Route::get('/setlists/service/{service_id}', [SetlistController::class, 'findSetlistByServiceId'])->middleware('auth:jwt-custom');

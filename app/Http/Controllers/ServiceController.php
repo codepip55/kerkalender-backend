@@ -8,13 +8,10 @@ use App\Models\PositionMember;
 use App\Models\Service;
 use App\Models\ServiceTeam;
 use App\Models\Setlist;
-use App\Models\Team;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use function Laravel\Prompts\error;
-use function Pest\Laravel\json;
 
 class ServiceController extends Controller
 {
@@ -358,5 +355,70 @@ class ServiceController extends Controller
         $service = Service::find($service_id);
         $service->delete();
         return $service;
+    }
+
+
+    /**
+     * Get all user's requests
+     */
+    public function findUserRequests(Request $request) {
+        // Get user
+        $user = User::find($request->user_id);
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        // Get all services
+        $services = Service::all();
+        $user_requests = [];
+
+        // Loop through services to find user's requests
+        foreach ($services as $service) {
+            foreach ($service->teams as $team) {
+                foreach ($team->positions as $position) {
+                    foreach ($position->members as $member) {
+                        if ($member->user_id == $user->id) {
+                            $user_requests[] = [
+                                'service' => $service,
+                                'team' => $team,
+                                'position' => $position,
+                                'status' => $member->status
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+
+        return response()->json(['data' => $user_requests]);
+    }
+    /**
+     * Update request status
+     */
+    public function updateStatus(Request $request)
+    {
+        $request->validate([
+            'v_request' => 'required',
+            'status' => 'required',
+            'user_id' => 'required'
+        ]);
+
+        $service_request = $request->v_request['service']['id'];
+        $service = Service::find($service_request);
+        if (!$service) {
+            return response()->json(['error' => 'Service not found'], 404);
+        }
+        // Loop over teams, positions, and members to find the request
+        foreach ($service->teams as $team) {
+            foreach ($team->positions as $position) {
+                foreach ($position->members as $member) {
+                    if ($member->user_id == $request->user_id) {
+                        $member->status = $request->status;
+                        $member->save();
+                        return response()->json(['message' => 'Request updated']);
+                    }
+                }
+            }
+        }
     }
 }
