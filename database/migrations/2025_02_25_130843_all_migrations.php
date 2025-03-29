@@ -53,7 +53,7 @@ return new class extends Migration {
             $table->time('end_time')->nullable();
             $table->string('location')->nullable();
             $table->text('notes')->nullable();
-            $table->foreignId('service_manager_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('service_manager_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->foreignId('setlist_id')->nullable()->constrained('setlists')->onDelete('cascade');
             $table->timestamps();
         });

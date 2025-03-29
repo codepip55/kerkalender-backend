@@ -113,15 +113,15 @@ class AuthController extends Controller
         return response()->json(['message' => 'Successfully logged out']);
     }
     private function removeTokens(Request $request) {
-        $this->internalauthcontroller->clearRefreshToken();
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
         $tokenRepository = app(TokenRepository::class);
         $refreshTokenRepository = app(RefreshTokenRepository::class);
 
         $tokenRepository->revokeAccessToken($request->user()->token());
         $refreshTokenRepository->revokeRefreshTokensByAccessTokenId($request->user()->token()->id);
+
+        $this->internalauthcontroller->clearRefreshToken();
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
     }
 }
