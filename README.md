@@ -34,7 +34,7 @@ See this article for a JSON API for the clients: https://laravel.com/docs/11.x/p
 
 Credentials for Test Client:
 ```
-Client ID: 9e19c665-7a09-4011-b1b9-2ebab2f7aded
-Client Secret: hJRp3MsQaGVJXmrwH3bsUqHHSjTxrwdKK2NVs5Hp
+Client ID: 9e8c0aee-cf78-4600-8d54-6009b49ced99
+Client Secret: B0XqxyJUYHM2EdWef2svwSxFqgwnvj0Lj6Esv7Hf
 Redirect URL: http%3A%2F%2Flocalhost%2Fauth%2Fcallback
 ```

@@ -17,6 +17,6 @@ Route::get('/forgot-password', [PagesController::class, 'getForgotPassword'])->n
 Route::post('/forgot-password', [AuthController::class, 'resetPassword'])->name('password.reset');
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
-Route::get('/email/verify', [PagesController::class, 'getEmailVerify'])->middleware('auth')->name('verification.notice');
+Route::get('/email/verify', [PagesController::class, 'getEmailVerify'])->name('verification.notice');
 Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])->middleware(['auth', 'signed'])->name('verification.verify');
 Route::post('/email/verification-notification', [AuthController::class, 'sendEmailVerificationNotification'])->middleware(['auth', 'throttle:6,1'])->name('verification.send');
