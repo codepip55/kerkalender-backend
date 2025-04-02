@@ -19,6 +19,10 @@ php artisan config:cache \
     && php artisan route:cache \
     && php artisan view:cache \
     && php artisan storage:link
+    
+# New passport key
+php artisan passport:keys --force
+chmod -R 0777 ./storage
 ````
 
 ## OAuth2 Clients
