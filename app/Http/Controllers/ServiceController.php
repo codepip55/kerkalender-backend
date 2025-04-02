@@ -328,7 +328,7 @@ class ServiceController extends Controller
             $user = User::find($user_id);
             $team = ServiceTeam::find($member_data['team_id']);
             $position = Position::find($member_data['position_id']);
-            $confirmationLink = url('/dashboard');
+            $confirmationLink = 'https://kerkalender.pepijncolenbrander.com/dashboard';
 
             if ($user && $team && $position) {
                 Mail::to($user->email)->send(new NotificationMail(
