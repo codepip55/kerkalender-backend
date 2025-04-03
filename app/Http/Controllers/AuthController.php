@@ -33,9 +33,13 @@ class AuthController extends Controller
             return redirect()->intended();
         }
 
-        return back()->withErrors([
-            'email' => 'Deze email is niet bekend bij ons.',
-        ]);
+        // If authentication fails, redirect back with an error message
+        // but preserve the intended URL
+        return redirect()->back()
+            ->withInput($request->only('email'))
+            ->withErrors([
+                'email' => 'De combinatie van email en wachtwoord is onjuist.',
+            ]);
     }
     public function register(Request $request) {
         $credentials = $request->validate([
@@ -116,8 +120,10 @@ class AuthController extends Controller
         $tokenRepository = app(TokenRepository::class);
         $refreshTokenRepository = app(RefreshTokenRepository::class);
 
-        $tokenRepository->revokeAccessToken($request->user()->token());
-        $refreshTokenRepository->revokeRefreshTokensByAccessTokenId($request->user()->token()->id);
+        if ($request->user()->token()) {
+            $tokenRepository->revokeAccessToken($request->user()->token());
+            $refreshTokenRepository->revokeRefreshTokensByAccessTokenId($request->user()->token()->id);
+        }
 
         $this->internalauthcontroller->clearRefreshToken();
         Auth::logout();
