@@ -18,6 +18,9 @@
                     <div class="max-w-sm mx-auto mt-1">
                         <a href="/logout" type="submit" class="block w-full bg-black text-white py-3 mt-10 rounded-3xl">Uitloggen</a>
                     </div>
+                    <div class="max-w-sm mx-auto mt-1">
+                        <a href="https://kerkalender.pepijncolenbrander.com" type="submit" class="block w-full bg-black text-white py-3 mt-10 rounded-3xl">Naar Kerkalender</a>
+                    </div>
                 </div>
             </div>
         </div>
